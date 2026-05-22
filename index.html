@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HemoCalc Pro - Conversor de Hemoquímica e Inmunología Completo</title>
+    
+    <!-- Meta-etiquetas para soporte PWA completo -->
+    <meta name="theme-color" content="#0d9488">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Conversor profesional y avanzado de analitos de hemoquímica clínica, enzimas, perfil tiroideo e inmunología con ajuste dinámico de rangos de laboratorio.">
+    
+    <!-- Tailwind CSS para diseño moderno, adaptativo y premium -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter para máxima legibilidad clínica -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome para iconografía interactiva de laboratorio -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        medical: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Deshabilitar flechas de control en inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        /* Transiciones de color fluidas */
+        .transition-all-300 {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Encabezado de la Aplicación -->
+    <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-100 dark:border-slate-700 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-gradient-to-tr from-medical-500 to-medical-700 text-white p-2.5 rounded-xl shadow-md flex items-center justify-center">
+                    <i class="fa-solid fa-flask-vial text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white leading-tight">HemoCalc Pro</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400">Conversor Clínico Multidisciplinario (Química & Inmunología)</p>
+                </div>
+            </div>
+
+            <!-- Controles del Encabezado (PWA e Interruptor de Tema) -->
+            <div class="flex items-center space-x-2">
+                <button id="pwa-install-btn" class="hidden md:flex items-center space-x-1.5 bg-medical-500 hover:bg-medical-600 text-white text-xs font-bold px-3 py-2 rounded-xl shadow-sm transition-all duration-150">
+                    <i class="fa-solid fa-circle-down"></i>
+                    <span>Instalar App</span>
+                </button>
+                
+                <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition" title="Cambiar tema">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl mx-auto px-4 py-6 w-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- BARRA LATERAL: Buscador, Filtros y Configuración General -->
+        <aside class="lg:col-span-1 space-y-6">
+            <!-- Panel de búsqueda y filtrado de Analitos -->
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
+                <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-medical-600"></i>
+                    Filtros de Búsqueda
+                </h2>
+                
+                <!-- Buscador de texto -->
+                <div class="relative">
+                    <input type="text" id="search-analyte" oninput="filterAnalytes()" placeholder="Buscar analito... (ej. TGP, C3, TSH)" class="w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium focus:ring-2 focus:ring-medical-500 focus:outline-none transition placeholder:text-slate-400">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                </div>
+
+                <!-- Selector de categorías -->
+                <div class="space-y-1.5">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider">Categoría</label>
+                    <div class="flex flex-wrap lg:flex-col gap-1.5" id="category-filters">
+                        <button onclick="selectCategory('all')" id="cat-all" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all bg-medical-500 text-white shadow-sm w-full">
+                            <i class="fa-solid fa-border-all mr-2"></i> Todos los Analitos
+                        </button>
+                        <button onclick="selectCategory('Metabolitos')" id="cat-Metabolitos" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full">
+                            <i class="fa-solid fa-dna mr-2"></i> Metabolitos y Renal
+                        </button>
+                        <button onclick="selectCategory('Lípidos')" id="cat-Lípidos" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full">
+                            <i class="fa-solid fa-droplet mr-2"></i> Perfil Lipídico
+                        </button>
+                        <button onclick="selectCategory('Hepatobiliar')" id="cat-Hepatobiliar" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full">
+                            <i class="fa-solid fa-heart-pulse mr-2"></i> Hepatobiliar y Enzimas
+                        </button>
+                        <button onclick="selectCategory('Electrolitos')" id="cat-Electrolitos" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full">
+                            <i class="fa-solid fa-bolt mr-2"></i> Proteínas, Iones e Hierro
+                        </button>
+                        <button onclick="selectCategory('Inmunología')" id="cat-Inmunología" class="text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full">
+                            <i class="fa-solid fa-shield-halved mr-2"></i> Inmunología y Hormonas
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel informativo -->
+            <div class="bg-gradient-to-br from-teal-700 to-medical-900 text-white p-5 rounded-2xl shadow-md space-y-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-teal-200">
+                    <i class="fa-solid fa-circle-question mr-1.5"></i> Adaptación de Rangos
+                </h3>
+                <p class="text-[11px] text-teal-100/90 leading-relaxed">
+                    Las unidades y límites de referencia pueden variar de acuerdo al laboratorio clínico o la marca de reactivo. Puede reajustar los rangos biológicos en cualquier momento pulsando el engranaje de cada analito.
+                </p>
+                <div class="bg-teal-950/40 p-2.5 rounded-xl border border-teal-500/20 text-[10px] text-teal-200 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                    <span>Los rangos de referencia personalizados se guardarán en su dispositivo de forma local.</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ÁREA CENTRAL: Grid de Analitos para Conversión Simultánea -->
+        <section class="lg:col-span-3 space-y-6">
+            
+            <!-- Aviso Informativo Superior -->
+            <div class="bg-emerald-50 dark:bg-emerald-950/20 border-l-4 border-emerald-500 p-4 rounded-r-2xl flex items-start gap-3 shadow-sm">
+                <div class="text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    <i class="fa-solid fa-circle-check text-lg animate-pulse"></i>
+                </div>
+                <div class="space-y-1">
+                    <h4 class="text-xs font-bold text-emerald-900 dark:text-emerald-300">Conversor Multidisciplinar Completo</h4>
+                    <p class="text-[11px] text-emerald-700 dark:text-emerald-400 leading-relaxed">
+                        Introduzca un valor en cualquiera de las columnas (Convencional o Sistema Internacional). El cálculo y la clasificación del semáforo biológico se realizan de forma inmediata y automática.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Grid de tarjetas de analitos -->
+            <div id="analytes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Se inyectarán dinámicamente mediante JavaScript -->
+            </div>
+
+            <!-- Sección de Fórmulas y pesos moleculares detallados -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-medical-600"></i>
+                    Fórmulas Científicas y Constantes de Conversión Aplicadas
+                </h3>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Las equivalencias matemáticas se derivan de la masa molecular estándar de cada compuesto o de los factores clínicos unificados de actividad catalítica internacional para las enzimas (donde $1\ \text{U/L} = 0.0167\ \mu\text{kat/L}$).
+                </p>
+
+                <div class="overflow-x-auto border border-slate-100 dark:border-slate-700 rounded-xl">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-bold border-b border-slate-100 dark:border-slate-700">
+                                <th class="py-2.5 px-4">Analito</th>
+                                <th class="py-2.5 px-4">Peso Mol. / Relación</th>
+                                <th class="py-2.5 px-4 text-center">Ecuación Directa</th>
+                                <th class="py-2.5 px-4 text-right">Constante Equivalencia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="formulas-table-body" class="divide-y divide-slate-100 dark:divide-slate-700/50 text-slate-600 dark:text-slate-400">
+                            <!-- Inyección dinámica de tabla de conversión -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notificaciones flotantes (Toasts personalizados) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none max-w-sm"></div>
+
+    <!-- Modal para editar rangos de referencia -->
+    <div id="ref-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-md p-6 shadow-xl border border-slate-100 dark:border-slate-700 transform scale-95 transition-all duration-300 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-700">
+                <div class="flex items-center space-x-2 text-slate-900 dark:text-white">
+                    <i class="fa-solid fa-sliders text-medical-600"></i>
+                    <h3 class="font-bold text-sm" id="modal-title">Editar Rangos de Referencia</h3>
+                </div>
+                <button onclick="closeRefModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Escriba los rangos de referencia del laboratorio para <span id="modal-analyte-name" class="font-bold text-slate-800 dark:text-white"></span> en su unidad convencional:
+                </p>
+
+                <!-- Input Rango Mínimo -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300" id="modal-label-min">Rango Mínimo Normal</label>
+                    <div class="relative">
+                        <input type="number" step="any" id="modal-input-min" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400" id="modal-unit-min">-</span>
+                    </div>
+                </div>
+
+                <!-- Input Rango Máximo -->
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300" id="modal-label-max">Rango Máximo Normal</label>
+                    <div class="relative">
+                        <input type="number" step="any" id="modal-input-max" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-medical-500 focus:outline-none">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400" id="modal-unit-max">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+                <button onclick="closeRefModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">
+                    Cancelar
+                </button>
+                <button onclick="saveRefModalChanges()" class="px-4 py-2 bg-medical-600 hover:bg-medical-700 text-white rounded-xl text-xs font-bold shadow-sm transition">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pie de página con descargo de responsabilidad clínica -->
+    <footer class="bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-800 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                HemoCalc Pro PWA • Diseñado para la conversión ágil y unificada de laboratorios bioquímicos e inmunodiagnóstico.
+            </p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                <span class="font-bold text-amber-600 dark:text-amber-400">Aviso Clínico:</span> Las conversiones son estimaciones matemáticas basadas en constantes bioquímicas internacionales y masas molares estándar. Confirme siempre las decisiones terapéuticas con el informe validado de su centro de salud.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts de la Aplicación -->
+    <script>
+        // --- Estado de la Aplicación ---
+        let selectedCategory = 'all';
+        let searchQuery = '';
+        let editingAnalyteKey = null;
+
+        // Base de Datos Estándar Expandida con todos los analitos solicitados
+        const defaultAnalytes = {
+            // METABOLITOS Y RENAL
+            glucose: {
+                id: "glucose",
+                name: "Glucosa",
+                category: "Metabolitos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 18.016,
+                toA: (val) => val * 18.016,
+                refMinA: 70,
+                refMaxA: 100,
+                molWeight: "180.16 g/mol",
+                formula: "mg/dL ÷ 18.016 = mmol/L",
+                info: "Principal sustrato de energía del organismo. Esencial en diabetes y trastornos del metabolismo."
+            },
+            creatinine: {
+                id: "creatinine",
+                name: "Creatinina",
+                category: "Metabolitos",
+                unitA: "mg/dL",
+                unitB: "µmol/L",
+                toB: (val) => val * 88.4,
+                toA: (val) => val / 88.4,
+                refMinA: 0.6,
+                refMaxA: 1.2,
+                molWeight: "113.12 g/mol",
+                formula: "mg/dL × 88.4 = µmol/L",
+                info: "Subproducto del catabolismo de fosfocreatina muscular. Indicador clave de función glomerular renal."
+            },
+            uric_acid: {
+                id: "uric_acid",
+                name: "Ácido Úrico",
+                category: "Metabolitos",
+                unitA: "mg/dL",
+                unitB: "µmol/L",
+                toB: (val) => val * 59.48,
+                toA: (val) => val / 59.48,
+                refMinA: 3.5,
+                refMaxA: 7.2,
+                molWeight: "168.11 g/mol",
+                formula: "mg/dL × 59.48 = µmol/L",
+                info: "Producto final del catabolismo de purinas. Niveles elevados pueden ocasionar gota o litiasis renal."
+            },
+            urea: {
+                id: "urea",
+                name: "Urea",
+                category: "Metabolitos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 6.006,
+                toA: (val) => val * 6.006,
+                refMinA: 15,
+                refMaxA: 45,
+                molWeight: "60.06 g/mol",
+                formula: "mg/dL ÷ 6.006 = mmol/L",
+                info: "Principal desecho nitrogenado del metabolismo proteico sintetizado en el hígado."
+            },
+
+            // LÍPIDOS
+            cholesterol: {
+                id: "cholesterol",
+                name: "Colesterol Total",
+                category: "Lípidos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 38.67,
+                toA: (val) => val * 38.67,
+                refMinA: 120,
+                refMaxA: 200,
+                molWeight: "386.65 g/mol",
+                formula: "mg/dL ÷ 38.67 = mmol/L",
+                info: "Lípido estructural de membranas y precursor hormonal. Factor predictor de riesgo aterogénico."
+            },
+            triglycerides: {
+                id: "triglycerides",
+                name: "Triglicéridos",
+                category: "Lípidos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 88.57,
+                toA: (val) => val * 88.57,
+                refMinA: 40,
+                refMaxA: 150,
+                molWeight: "885.4 g/mol",
+                formula: "mg/dL ÷ 88.57 = mmol/L",
+                info: "Forma de almacenamiento de grasa en tejido adiposo y transporte de energía plasmática."
+            },
+
+            // HEPATOBILIAR Y ENZIMAS (INCLUYE TGP, TGO, GGT, FAL, LDH)
+            alt: {
+                id: "alt",
+                name: "TGP / ALT (Transaminasa Glutámico-Pirúvica)",
+                category: "Hepatobiliar",
+                unitA: "U/L",
+                unitB: "µkat/L",
+                toB: (val) => val * 0.0167,
+                toA: (val) => val / 0.0167,
+                refMinA: 7,
+                refMaxA: 56,
+                molWeight: "1 U/L = 0.0167 µkat/L",
+                formula: "U/L × 0.0167 = µkat/L",
+                info: "Enzima citoplasmática predominantemente hepática. Marcador de necrosis de hepatocitos."
+            },
+            ast: {
+                id: "ast",
+                name: "TGO / AST (Transaminasa Glutámico-Oxalacética)",
+                category: "Hepatobiliar",
+                unitA: "U/L",
+                unitB: "µkat/L",
+                toB: (val) => val * 0.0167,
+                toA: (val) => val / 0.0167,
+                refMinA: 10,
+                refMaxA: 40,
+                molWeight: "1 U/L = 0.0167 µkat/L",
+                formula: "U/L × 0.0167 = µkat/L",
+                info: "Enzima presente en hígado, miocardio y músculo. Indicador de lesión celular y tisular."
+            },
+            ggt: {
+                id: "ggt",
+                name: "GGT (Gamma Glutamil Transferasa)",
+                category: "Hepatobiliar",
+                unitA: "U/L",
+                unitB: "µkat/L",
+                toB: (val) => val * 0.0167,
+                toA: (val) => val / 0.0167,
+                refMinA: 8,
+                refMaxA: 60,
+                molWeight: "1 U/L = 0.0167 µkat/L",
+                formula: "U/L × 0.0167 = µkat/L",
+                info: "Enzima unida a membrana del sistema biliar. Muy sensible a colestasis e inducción por alcohol."
+            },
+            alp: {
+                id: "alp",
+                name: "FAL / ALP (Fosfatasa Alcalina)",
+                category: "Hepatobiliar",
+                unitA: "U/L",
+                unitB: "µkat/L",
+                toB: (val) => val * 0.0167,
+                toA: (val) => val / 0.0167,
+                refMinA: 44,
+                refMaxA: 147,
+                molWeight: "1 U/L = 0.0167 µkat/L",
+                formula: "U/L × 0.0167 = µkat/L",
+                info: "Enzima asociada a canalículos biliares y recambio óseo por osteoblastos."
+            },
+            ldh: {
+                id: "ldh",
+                name: "LDH (Lactato Deshidrogenasa)",
+                category: "Hepatobiliar",
+                unitA: "U/L",
+                unitB: "µkat/L",
+                toB: (val) => val * 0.0167,
+                toA: (val) => val / 0.0167,
+                refMinA: 140,
+                refMaxA: 280,
+                molWeight: "1 U/L = 0.0167 µkat/L",
+                formula: "U/L × 0.0167 = µkat/L",
+                info: "Enzima citoplasmática ubicua. Marcador de hemólisis, recambio celular o lesión celular inespecífica."
+            },
+
+            // PROTEÍNAS, IONES E HIERRO (INCLUYE PROTEÍNAS TOTALES, ALBÚMINA, CA, FÓSFORO, HIERRO, FERRITINA, TRANSFERRINA)
+            proteins_total: {
+                id: "proteins_total",
+                name: "Proteínas Totales",
+                category: "Electrolitos",
+                unitA: "g/dL",
+                unitB: "g/L",
+                toB: (val) => val * 10,
+                toA: (val) => val / 10,
+                refMinA: 6.0,
+                refMaxA: 8.3,
+                molWeight: "N/A",
+                formula: "g/dL × 10 = g/L",
+                info: "Suma de albúmina y globulinas plasmáticas. Refleja estado nutricional y síntesis hepática."
+            },
+            albumin: {
+                id: "albumin",
+                name: "Albúmina",
+                category: "Electrolitos",
+                unitA: "g/dL",
+                unitB: "g/L",
+                toB: (val) => val * 10,
+                toA: (val) => val / 10,
+                refMinA: 3.5,
+                refMaxA: 5.0,
+                molWeight: "66,500 g/mol",
+                formula: "g/dL × 10 = g/L",
+                info: "Principal transportador plasmático y generador de la presión coloidosmótica capilar."
+            },
+            calcium: {
+                id: "calcium",
+                name: "Calcio Sérico (Ca)",
+                category: "Electrolitos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 4.01,
+                toA: (val) => val * 4.01,
+                refMinA: 8.5,
+                refMaxA: 10.5,
+                molWeight: "40.08 g/mol",
+                formula: "mg/dL ÷ 4.01 = mmol/L",
+                info: "Ion regulado por PTH y vitamina D. Crítico para la contracción muscular y la estabilidad ósea."
+            },
+            phosphorus: {
+                id: "phosphorus",
+                name: "Fósforo Inorgánico",
+                category: "Electrolitos",
+                unitA: "mg/dL",
+                unitB: "mmol/L",
+                toB: (val) => val / 3.097,
+                toA: (val) => val * 3.097,
+                refMinA: 2.5,
+                refMaxA: 4.5,
+                molWeight: "30.97 g/mol",
+                formula: "mg/dL ÷ 3.097 = mmol/L",
+                info: "Anión intracelular involucrado en el metabolismo energético celular (ATP) y fosforilación."
+            },
+            iron: {
+                id: "iron",
+                name: "Hierro Sérico",
+                category: "Electrolitos",
+                unitA: "µg/dL",
+                unitB: "µmol/L",
+                toB: (val) => val * 0.1791,
+                toA: (val) => val / 0.1791,
+                refMinA: 60,
+                refMaxA: 170,
+                molWeight: "55.85 g/mol",
+                formula: "µg/dL × 0.1791 = µmol/L",
+                info: "Metal esencial circulante fijado a la transferrina para la síntesis de hemoglobina."
+            },
+            ferritin: {
+                id: "ferritin",
+                name: "Ferritina",
+                category: "Electrolitos",
+                unitA: "ng/mL",
+                unitB: "pmol/L",
+                toB: (val) => val * 2.247,
+                toA: (val) => val / 2.247,
+                refMinA: 30,
+                refMaxA: 400,
+                molWeight: "440,000 g/mol",
+                formula: "ng/mL × 2.247 = pmol/L",
+                info: "Principal proteína intracelular de reserva férrica. Actúa también como reactante de fase aguda."
+            },
+            transferrin: {
+                id: "transferrin",
+                name: "Transferrina",
+                category: "Electrolitos",
+                unitA: "mg/dL",
+                unitB: "µmol/L",
+                toB: (val) => val * 0.1257,
+                toA: (val) => val / 0.1257,
+                refMinA: 200,
+                refMaxA: 360,
+                molWeight: "79,570 g/mol",
+                formula: "mg/dL × 0.1257 = µmol/L",
+                info: "Proteína plasmática responsable del transporte de hierro a la médula ósea y tejidos."
+            },
+
+            // INMUNOLOGÍA Y HORMONAS (INCLUYE IGG, IGA, IGM, IGE, C3, C4, C1Q, T3, T4, TSH, PCR, FACTOR REUMATOIDEO)
+            igg: {
+                id: "igg",
+                name: "Inmunoglobulina G (IgG)",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "g/L",
+                toB: (val) => val * 0.01,
+                toA: (val) => val / 0.01,
+                refMinA: 700,
+                refMaxA: 1600,
+                molWeight: "150,000 g/mol",
+                formula: "mg/dL × 0.01 = g/L",
+                info: "Anticuerpo circulante más abundante. Brinda inmunidad secundaria y memoria frente a patógenos."
+            },
+            iga: {
+                id: "iga",
+                name: "Inmunoglobulina A (IgA)",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "g/L",
+                toB: (val) => val * 0.01,
+                toA: (val) => val / 0.01,
+                refMinA: 70,
+                refMaxA: 400,
+                molWeight: "160,000 g/mol",
+                formula: "mg/dL × 0.01 = g/L",
+                info: "Inmunoglobulina secretora clave en la protección inmunológica de mucosas respiratorias e intestinales."
+            },
+            igm: {
+                id: "igm",
+                name: "Inmunoglobulina M (IgM)",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "g/L",
+                toB: (val) => val * 0.01,
+                toA: (val) => val / 0.01,
+                refMinA: 40,
+                refMaxA: 230,
+                molWeight: "900,000 g/mol",
+                formula: "mg/dL × 0.01 = g/L",
+                info: "Anticuerpo de estructura pentamérica. Representa la respuesta inmunitaria humoral primaria rápida."
+            },
+            ige: {
+                id: "ige",
+                name: "Inmunoglobulina E (IgE)",
+                category: "Inmunología",
+                unitA: "UI/mL",
+                unitB: "ng/mL",
+                toB: (val) => val * 2.4,
+                toA: (val) => val / 2.4,
+                refMinA: 0,
+                refMaxA: 100,
+                molWeight: "190,000 g/mol",
+                formula: "UI/mL × 2.4 = ng/mL",
+                info: "Mediadora de respuestas de hipersensibilidad tipo I (alergias) y defensa antiparasitaria."
+            },
+            c3: {
+                id: "c3",
+                name: "Complemento C3",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "g/L",
+                toB: (val) => val * 0.01,
+                toA: (val) => val / 0.01,
+                refMinA: 90,
+                refMaxA: 180,
+                molWeight: "185,000 g/mol",
+                formula: "mg/dL × 0.01 = g/L",
+                info: "Proteína de convergencia de las vías del complemento. Útil en el estudio de vasculitis y LES."
+            },
+            c4: {
+                id: "c4",
+                name: "Complemento C4",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "g/L",
+                toB: (val) => val * 0.01,
+                toA: (val) => val / 0.01,
+                refMinA: 10,
+                refMaxA: 40,
+                molWeight: "205,000 g/mol",
+                formula: "mg/dL × 0.01 = g/L",
+                info: "Marcador de activación clásica del complemento. Útil para valorar consumo inmunitario."
+            },
+            c1q: {
+                id: "c1q",
+                name: "Complemento C1q",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "mg/L",
+                toB: (val) => val * 10,
+                toA: (val) => val / 10,
+                refMinA: 10,
+                refMaxA: 25,
+                molWeight: "410,000 g/mol",
+                formula: "mg/dL × 10 = mg/L",
+                info: "Subcomponente del factor C1 del complemento. Útil en el diagnóstico de glomerulonefritis membranoproliferativa."
+            },
+            t3: {
+                id: "t3",
+                name: "T3 Total (Triyodotironina)",
+                category: "Inmunología",
+                unitA: "ng/dL",
+                unitB: "nmol/L",
+                toB: (val) => val * 0.01536,
+                toA: (val) => val / 0.01536,
+                refMinA: 80,
+                refMaxA: 200,
+                molWeight: "650.98 g/mol",
+                formula: "ng/dL × 0.01536 = nmol/L",
+                info: "Hormona tiroidea periférica muy activa metabólicamente, en su forma total unida e independiente."
+            },
+            t4: {
+                id: "t4",
+                name: "T4 Total (Tiroxina)",
+                category: "Inmunología",
+                unitA: "µg/dL",
+                unitB: "nmol/L",
+                toB: (val) => val * 12.87,
+                toA: (val) => val / 12.87,
+                refMinA: 4.5,
+                refMaxA: 11.2,
+                molWeight: "776.87 g/mol",
+                formula: "µg/dL × 12.87 = nmol/L",
+                info: "Principal prohormona liberada por la glándula tiroides, marcador global tiroideo."
+            },
+            tsh: {
+                id: "tsh",
+                name: "TSH (Hormona Estimulante de Tiroides)",
+                category: "Inmunología",
+                unitA: "µUI/mL",
+                unitB: "mUI/L",
+                toB: (val) => val * 1.0,
+                toA: (val) => val / 1.0,
+                refMinA: 0.4,
+                refMaxA: 4.0,
+                molWeight: "28,000 g/mol",
+                formula: "µUI/mL × 1.0 = mUI/L",
+                info: "Hormona hipofisaria reguladora tiroidea. Diagnóstico diferencial de hipo e hipertiroidismo primario."
+            },
+            crp: {
+                id: "crp",
+                name: "PCR (Proteína C Reactiva)",
+                category: "Inmunología",
+                unitA: "mg/dL",
+                unitB: "mg/L",
+                toB: (val) => val * 10,
+                toA: (val) => val / 10,
+                refMinA: 0.1,
+                refMaxA: 0.8,
+                molWeight: "1 mg/dL = 10 mg/L",
+                formula: "mg/dL × 10 = mg/L",
+                info: "Reactante de fase aguda clásico. Incremento veloz ante inflamación e infecciones bacterianas agudas."
+            },
+            factor_reumatoideo: {
+                id: "factor_reumatoideo",
+                name: "Factor Reumatoide (FR)",
+                category: "Inmunología",
+                unitA: "UI/mL",
+                unitB: "kUI/L",
+                toB: (val) => val * 1.0,
+                toA: (val) => val / 1.0,
+                refMinA: 0,
+                refMaxA: 14,
+                molWeight: "Autoanticuerpo IgM",
+                formula: "UI/mL × 1.0 = kUI/L",
+                info: "Autoanticuerpo contra la fracción Fc de IgG. Marcador de Artritis Reumatoide y patologías reumáticas."
+            }
+        };
+
+        // Utilizar la versión 3 de almacenamiento local para forzar la actualización de analitos
+        let analytes = JSON.parse(localStorage.getItem('hemo_analytes_v3')) || defaultAnalytes;
+
+        window.onload = function() {
+            // Guardar base de datos actualizada en local storage
+            localStorage.setItem('hemo_analytes_v3', JSON.stringify(analytes));
+            renderAnalytesGrid();
+            renderFormulasTable();
+            checkSystemTheme();
+            setupPWAInstall();
+        }
+
+        // --- Manejo del Tema Claro / Oscuro ---
+        function checkSystemTheme() {
+            if (localStorage.getItem('theme') === 'dark' || 
+                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                showToast("Modo claro activado", "info");
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                showToast("Modo oscuro activado", "info");
+            }
+        }
+
+        // --- Renderizar Grid de Analitos ---
+        function renderAnalytesGrid() {
+            const grid = document.getElementById('analytes-grid');
+            grid.innerHTML = '';
+
+            Object.keys(analytes).forEach(key => {
+                const item = analytes[key];
+                
+                // Filtros de categoría y búsqueda de texto
+                if (selectedCategory !== 'all' && item.category !== selectedCategory) return;
+                if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
+
+                // Cálculo automático del rango para mostrar en el subtítulo (Unidad B)
+                const refMinB = item.toB(item.refMinA).toFixed(2);
+                const refMaxB = item.toB(item.refMaxA).toFixed(2);
+
+                const cardHtml = `
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-700 space-y-4 hover:shadow-md transition duration-200">
+                        <!-- Cabecera de la Tarjeta -->
+                        <div class="flex justify-between items-start">
+                            <div class="space-y-1">
+                                <h3 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                                    <span class="w-1.5 h-3.5 bg-medical-500 rounded-full"></span>
+                                    ${item.name}
+                                </h3>
+                                <span class="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-md font-semibold uppercase tracking-wider">
+                                    ${item.category}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center space-x-1">
+                                <!-- Botón Información -->
+                                <button onclick="showInfo('${key}')" class="p-1.5 rounded-lg text-slate-400 hover:text-medical-600 dark:hover:text-medical-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition" title="Información Clínica">
+                                    <i class="fa-solid fa-circle-info text-xs"></i>
+                                </button>
+                                <!-- Botón Editar Límites -->
+                                <button onclick="openRefModal('${key}')" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition" title="Editar Límites de Laboratorio">
+                                    <i class="fa-solid fa-gear text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Campos Bidireccionales Limpios -->
+                        <div class="grid grid-cols-5 gap-2 items-center">
+                            <!-- Entrada Convencional -->
+                            <div class="col-span-2 space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">${item.unitA}</span>
+                                <input type="number" step="any" placeholder="Vacío" id="input-${key}-A" oninput="convert('${key}', 'A')" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-medical-500 focus:outline-none text-xs text-center transition">
+                            </div>
+
+                            <!-- Separador direccional -->
+                            <div class="col-span-1 flex justify-center text-slate-300 dark:text-slate-600 pt-3">
+                                <i class="fa-solid fa-right-left text-xs"></i>
+                            </div>
+
+                            <!-- Entrada Sistema Internacional -->
+                            <div class="col-span-2 space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase block">${item.unitB}</span>
+                                <input type="number" step="any" placeholder="Vacío" id="input-${key}-B" oninput="convert('${key}', 'B')" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl font-extrabold text-slate-900 dark:text-white focus:ring-2 focus:ring-medical-500 focus:outline-none text-xs text-center transition">
+                            </div>
+                        </div>
+
+                        <!-- Estado Clínico y Barra Visual -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="flex justify-between items-center text-[10px] text-slate-400 font-semibold">
+                                <span>Ref: ${item.refMinA} - ${item.refMaxA} ${item.unitA}</span>
+                                <span>Ref: ${refMinB} - ${refMaxB} ${item.unitB}</span>
+                            </div>
+                            <!-- Barra base -->
+                            <div class="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full relative overflow-hidden">
+                                <div id="status-bar-${key}" class="absolute top-0 bottom-0 left-0 w-0 transition-all duration-300 bg-emerald-500"></div>
+                            </div>
+                            <!-- Leyenda -->
+                            <div class="flex justify-between items-center">
+                                <span class="text-[9px] text-slate-400 italic">Conversor: ${item.formula}</span>
+                                <span id="status-label-${key}" class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Sin Datos</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            if (grid.children.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-magnifying-glass text-slate-300 dark:text-slate-600 text-3xl mb-3"></i>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">No se encontraron analitos con los filtros aplicados</p>
+                    </div>
+                `;
+            }
+        }
+
+        // --- Cálculo de Conversiones en Tiempo Real ---
+        function convert(key, source) {
+            const item = analytes[key];
+            const inputA = document.getElementById(`input-${key}-A`);
+            const inputB = document.getElementById(`input-${key}-B`);
+
+            if (source === 'A') {
+                const valA = parseFloat(inputA.value);
+                if (isNaN(valA) || inputA.value === '') {
+                    inputB.value = '';
+                    updateStatusIndicator(key, null);
+                    return;
+                }
+                const converted = item.toB(valA);
+                inputB.value = Number(converted.toFixed(4));
+                updateStatusIndicator(key, valA);
+            } else {
+                const valB = parseFloat(inputB.value);
+                if (isNaN(valB) || inputB.value === '') {
+                    inputA.value = '';
+                    updateStatusIndicator(key, null);
+                    return;
+                }
+                const converted = item.toA(valB);
+                inputA.value = Number(converted.toFixed(4));
+                updateStatusIndicator(key, converted);
+            }
+        }
+
+        // --- Actualizar Indicador del Semáforo Clínico ---
+        function updateStatusIndicator(key, valueA) {
+            const item = analytes[key];
+            const bar = document.getElementById(`status-bar-${key}`);
+            const label = document.getElementById(`status-label-${key}`);
+
+            if (valueA === null || isNaN(valueA)) {
+                bar.style.width = '0%';
+                bar.className = 'absolute top-0 bottom-0 left-0 w-0 transition-all duration-300';
+                label.textContent = "Sin Datos";
+                label.className = "text-[9px] font-bold uppercase tracking-wider text-slate-400";
+                return;
+            }
+
+            const min = item.refMinA;
+            const max = item.refMaxA;
+
+            let percentage = 0;
+            if (valueA < min) {
+                // Bajo rango (escala visual 0% - 30%)
+                percentage = Math.max(5, (valueA / (min || 1)) * 30);
+                bar.style.width = `${percentage}%`;
+                bar.className = 'absolute top-0 bottom-0 left-0 transition-all duration-300 bg-sky-500';
+                label.textContent = "Bajo Rango";
+                label.className = "text-[9px] font-bold uppercase tracking-wider text-sky-500 dark:text-sky-400";
+            } else if (valueA >= min && valueA <= max) {
+                // Rango normal (escala visual 30% - 70%)
+                const rangeWidth = max - min;
+                const progressInside = (valueA - min) / (rangeWidth || 1);
+                percentage = 30 + (progressInside * 40);
+                bar.style.width = `${percentage}%`;
+                bar.className = 'absolute top-0 bottom-0 left-0 transition-all duration-300 bg-emerald-500';
+                label.textContent = "Normal";
+                label.className = "text-[9px] font-bold uppercase tracking-wider text-emerald-500 dark:text-emerald-400";
+            } else {
+                // Alto rango (escala visual 70% - 100%)
+                const overLimit = valueA - max;
+                const ratio = Math.min(1, overLimit / (max || 1));
+                percentage = 70 + (ratio * 30);
+                bar.style.width = `${percentage}%`;
+                bar.className = 'absolute top-0 bottom-0 left-0 transition-all duration-300 bg-rose-500';
+                label.textContent = "Alto Rango";
+                label.className = "text-[9px] font-bold uppercase tracking-wider text-rose-500 dark:text-rose-400";
+            }
+        }
+
+        // --- Diálogos de Información Clínica Integrados ---
+        function showInfo(key) {
+            const item = analytes[key];
+            showToast(`<strong class="text-teal-600 dark:text-teal-400 text-xs">${item.name}:</strong><br><span class="text-[11px] leading-relaxed">${item.info}</span>`, "info", 7000);
+        }
+
+        // --- Modificar y Guardar Rangos de Laboratorio ---
+        function openRefModal(key) {
+            editingAnalyteKey = key;
+            const item = analytes[key];
+            
+            document.getElementById('modal-analyte-name').textContent = item.name;
+            document.getElementById('modal-input-min').value = item.refMinA;
+            document.getElementById('modal-input-max').value = item.refMaxA;
+            
+            document.getElementById('modal-unit-min').textContent = item.unitA;
+            document.getElementById('modal-unit-max').textContent = item.unitA;
+
+            const modal = document.getElementById('ref-modal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.children[0].classList.remove('scale-95');
+        }
+
+        function closeRefModal() {
+            const modal = document.getElementById('ref-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.children[0].classList.add('scale-95');
+            editingAnalyteKey = null;
+        }
+
+        function saveRefModalChanges() {
+            if (!editingAnalyteKey) return;
+            
+            const minVal = parseFloat(document.getElementById('modal-input-min').value);
+            const maxVal = parseFloat(document.getElementById('modal-input-max').value);
+
+            if (isNaN(minVal) || isNaN(maxVal) || minVal < 0 || maxVal <= minVal) {
+                showToast("Por favor, introduzca valores de laboratorio válidos.", "error");
+                return;
+            }
+
+            analytes[editingAnalyteKey].refMinA = minVal;
+            analytes[editingAnalyteKey].refMaxA = maxVal;
+
+            // Guardar en almacenamiento local v3
+            localStorage.setItem('hemo_analytes_v3', JSON.stringify(analytes));
+
+            showToast(`Límites para <strong>${analytes[editingAnalyteKey].name}</strong> actualizados.`, "success");
+
+            closeRefModal();
+            renderAnalytesGrid();
+            renderFormulasTable();
+        }
+
+        // --- Gestión de Búsquedas y Categorías ---
+        function selectCategory(cat) {
+            document.querySelectorAll('#category-filters button').forEach(btn => {
+                btn.className = "text-left px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/50 w-full";
+            });
+
+            const activeBtn = document.getElementById(`cat-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = "text-left px-3 py-2 rounded-lg text-xs font-bold transition-all bg-medical-500 text-white shadow-sm w-full";
+            }
+
+            selectedCategory = cat;
+            renderAnalytesGrid();
+        }
+
+        function filterAnalytes() {
+            searchQuery = document.getElementById('search-analyte').value;
+            renderAnalytesGrid();
+        }
+
+        // --- Renderizar Tabla de Fórmulas ---
+        function renderFormulasTable() {
+            const tbody = document.getElementById('formulas-table-body');
+            tbody.innerHTML = '';
+
+            Object.keys(analytes).forEach(key => {
+                const item = analytes[key];
+                
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50/40 dark:hover:bg-slate-800/20 transition-colors";
+                
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-bold text-slate-800 dark:text-slate-200">${item.name}</td>
+                    <td class="py-2.5 px-4 text-slate-500 dark:text-slate-400 font-medium">${item.molWeight}</td>
+                    <td class="py-2.5 px-4 text-center">
+                        <span class="font-mono text-[11px] text-teal-600 dark:text-teal-400 bg-slate-50 dark:bg-slate-800/80 rounded-lg py-1 px-2.5 inline-block my-1.5 border border-slate-100 dark:border-slate-700">
+                            ${item.formula}
+                        </span>
+                    </td>
+                    <td class="py-2.5 px-4 text-right font-bold text-slate-700 dark:text-slate-300">
+                        1 ${item.unitA} = ${item.toB(1).toFixed(4)} ${item.unitB}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- Notificaciones Toast Custom ---
+        function showToast(message, type = "info", duration = 4000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            toast.className = `p-3.5 rounded-xl shadow-lg border text-xs text-slate-800 dark:text-white flex items-start gap-2.5 pointer-events-auto transition-all duration-300 translate-y-2 opacity-0 bg-white dark:bg-slate-800`;
+            
+            let icon = '';
+            if (type === 'success') {
+                toast.classList.add('border-emerald-500', 'dark:border-emerald-600');
+                icon = '<i class="fa-solid fa-circle-check text-emerald-500"></i>';
+            } else if (type === 'error') {
+                toast.classList.add('border-rose-500', 'dark:border-rose-600');
+                icon = '<i class="fa-solid fa-circle-exclamation text-rose-500"></i>';
+            } else {
+                toast.classList.add('border-medical-500', 'dark:border-medical-600');
+                icon = '<i class="fa-solid fa-flask-vial text-medical-500"></i>';
+            }
+
+            toast.innerHTML = `
+                <div class="mt-0.5">${icon}</div>
+                <div class="flex-1">${message}</div>
+            `;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, duration);
+        }
+
+        // --- Registro dinámico de Manifiesto PWA & Service Worker ---
+        function setupPWAInstall() {
+            const manifest = {
+                "name": "HemoCalc Pro - Conversor Hemoquímica",
+                "short_name": "HemoCalc",
+                "start_url": ".",
+                "display": "standalone",
+                "background_color": "#090d16",
+                "theme_color": "#0d9488",
+                "icons": [
+                    {
+                        "src": "https://placehold.co/192x192/0d9488/ffffff?text=Hemo",
+                        "sizes": "192x192",
+                        "type": "image/png"
+                    },
+                    {
+                        "src": "https://placehold.co/512x512/0d9488/ffffff?text=HemoCalc",
+                        "sizes": "512x512",
+                        "type": "image/png"
+                    }
+                ]
+            };
+            const stringManifest = JSON.stringify(manifest);
+            const blobManifest = new Blob([stringManifest], {type: 'application/json'});
+            const manifestURL = URL.createObjectURL(blobManifest);
+            
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestURL;
+            document.head.appendChild(link);
+
+            if ('serviceWorker' in navigator) {
+                const swCode = `
+                    const cacheName = 'hemocalc-v3';
+                    const assets = ['./', './index.html'];
+                    self.addEventListener('install', e => {
+                        e.waitUntil(caches.open(cacheName).then(cache => {
+                            return cache.addAll(assets);
+                        }));
+                    });
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(caches.match(e.request).then(response => {
+                            return response || fetch(e.request);
+                        }));
+                    });
+                `;
+                const blobSW = new Blob([swCode], {type: 'application/javascript'});
+                const swURL = URL.createObjectURL(blobSW);
+                
+                navigator.serviceWorker.register(swURL).then(() => {
+                    console.log('PWA Service Worker Virtual registrado.');
+                }).catch(err => {
+                    console.warn('Error registrando SW:', err);
+                });
+            }
+
+            let deferredPrompt;
+            const installBtn = document.getElementById('pwa-install-btn');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installBtn.classList.remove('hidden');
+                
+                installBtn.addEventListener('click', () => {
+                    installBtn.classList.add('hidden');
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            showToast("¡HemoCalc Pro instalado correctamente!", "success");
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            });
+        }
+    </script>
+</body>
+</html>
